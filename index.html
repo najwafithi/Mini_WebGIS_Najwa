@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini WebGIS Assignment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      margin-bottom: 15px;
+    }
+
+    .controls {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    #map {
+      width: 900px;
+      height: 500px;
+      border: 2px solid #999;
+      position: relative;
+      background: linear-gradient(to bottom, lightblue, lightgreen);
+      overflow: hidden;
+    }
+
+    .marker {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      position: absolute;
+      cursor: pointer;
+      border: 2px solid black;
+      z-index: 10;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #info {
+      margin-top: 15px;
+      width: 880px;
+      min-height: 30px;
+      border: 1px solid #bbb;
+      padding: 12px;
+      background: #f3f3f3;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini WebGIS</h1>
+
+  <div class="controls">
+    <label for="markerType">Marker Type:</label>
+    <select id="markerType">
+      <option value="red">Red Marker</option>
+      <option value="blue">Blue Marker</option>
+      <option value="green">Green Marker</option>
+    </select>
+
+    <button id="btnAdd">Add Marker</button>
+    <button id="btnClear">Clear All Markers</button>
+    <button id="btnToggle">Toggle Marker Layer</button>
+  </div>
+
+  <div id="map"></div>
+  <div id="info">Select a marker</div>
+
+  <script>
+    const map = document.getElementById("map");
+    const infoBox = document.getElementById("info");
+    const markerTypeSelect = document.getElementById("markerType");
+    const btnAdd = document.getElementById("btnAdd");
+    const btnClear = document.getElementById("btnClear");
+    const btnToggle = document.getElementById("btnToggle");
+
+    class Marker {
+      constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.visible = true;
+
+        this.element = document.createElement("div");
+        this.element.className = "marker";
+        this.element.style.left = x + "px";
+        this.element.style.top = y + "px";
+        this.element.style.backgroundColor = this.getColor(type);
+
+        this.element.addEventListener("click", () => {
+          this.onClick();
+        });
+      }
+
+      getColor(type) {
+        if (type === "red") return "red";
+        if (type === "blue") return "blue";
+        if (type === "green") return "green";
+        return "black";
+      }
+
+      onClick() {
+        infoBox.textContent =
+          "Marker clicked | Type: " + this.type +
+          " | X: " + Math.round(this.x) +
+          " | Y: " + Math.round(this.y);
+      }
+
+      addTo(mapElement) {
+        mapElement.appendChild(this.element);
+      }
+
+      show() {
+        this.visible = true;
+        this.element.classList.remove("hidden");
+      }
+
+      hide() {
+        this.visible = false;
+        this.element.classList.add("hidden");
+      }
+
+      toggle() {
+        if (this.visible) {
+          this.hide();
+        } else {
+          this.show();
+        }
+      }
+
+      remove() {
+        this.element.remove();
+      }
+    }
+
+    class MarkerLayer {
+      constructor() {
+        this.markers = [];
+        this.visible = true;
+      }
+
+      addMarker(marker) {
+        this.markers.push(marker);
+        marker.addTo(map);
+      }
+
+      clearAll() {
+        this.markers.forEach(marker => marker.remove());
+        this.markers = [];
+        infoBox.textContent = "All markers cleared";
+      }
+
+      toggleVisibility() {
+        this.visible = !this.visible;
+
+        this.markers.forEach(marker => {
+          if (this.visible) {
+            marker.show();
+          } else {
+            marker.hide();
+          }
+        });
+
+        if (this.visible) {
+          infoBox.textContent = "Marker layer is visible";
+        } else {
+          infoBox.textContent = "Marker layer is hidden";
+        }
+      }
+    }
+
+    const markerLayer = new MarkerLayer();
+
+    btnAdd.addEventListener("click", () => {
+      const markerType = markerTypeSelect.value;
+
+      const x = Math.floor(Math.random() * (map.clientWidth - 20));
+      const y = Math.floor(Math.random() * (map.clientHeight - 20));
+
+      const marker = new Marker(x, y, markerType);
+      markerLayer.addMarker(marker);
+
+      infoBox.textContent = markerType + " marker added";
+    });
+
+    btnClear.addEventListener("click", () => {
+      markerLayer.clearAll();
+    });
+
+    btnToggle.addEventListener("click", () => {
+      markerLayer.toggleVisibility();
+    });
+  </script>
+</body>
+</html>
